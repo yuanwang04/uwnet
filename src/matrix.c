@@ -45,6 +45,7 @@ void free_matrix(matrix m)
     }
 }
 
+// Returns the index of the data at (row, col) for the matrix
 int pos(matrix m, int row, int col) {
     return row * m.cols + col;
 }
