@@ -60,8 +60,13 @@ matrix im2col(image im, int size, int stride)
     for(i = 0; i < col.rows; i+=size*size){
         for(j = 0; j < col.cols; j++){
             for(k = 0; k < size*size; k++){
-                float data = 
-                    get_pixel(im, j/im.w+k/size, j%im.w+k%size, i/size*size);
+                float data = 0.0;
+                int x = (j%outw)*stride+k%size-(size-1)/2;
+                int y = (j/outw)*stride+k/size-(size-1)/2;
+                if(!(x < 0 || y < 0 || x >= im.w || y >= im.h)){
+                    data = 
+                        get_pixel(im, x, y, i/(size*size));
+                }   
                 col.data[(i+k)*col.cols+j] = data;
             }
         }
@@ -86,6 +91,21 @@ image col2im(int width, int height, int channels, matrix col, int size, int stri
 
     // TODO: 5.2
     // Add values into image im from the column matrix
+    for(i = 0; i < col.rows; i+=size*size){
+        for(j = 0; j < col.cols; j++){
+            for(k = 0; k < size*size; k++){
+                float data = 0.0;
+                int x = (j%outw)*stride+k%size-(size-1)/2;
+                int y = (j/outw)*stride+k/size-(size-1)/2;
+                data = col.data[(i+k)*col.cols+j];
+                float original = 
+                        get_pixel(im, x, y, i/(size*size));
+                if(!(x < 0 || y < 0 || x >= im.w || y >= im.h)){
+                    set_pixel(im, x, y, i/(size*size), original + data);
+                }   
+            }
+        }
+    }
     
 
 
@@ -182,6 +202,7 @@ matrix backward_convolutional_layer(layer l, matrix dy)
 void update_convolutional_layer(layer l, float rate, float momentum, float decay)
 {
     // TODO: 5.3
+    update_connected_layer(l, rate, momentum, decay);
 }
 
 // Make a new convolutional layer
