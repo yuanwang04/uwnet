@@ -57,7 +57,15 @@ matrix im2col(image im, int size, int stride)
 
     // TODO: 5.1
     // Fill in the column matrix with patches from the image
-
+    for(i = 0; i < col.rows; i+=size*size){
+        for(j = 0; j < col.cols; j++){
+            for(k = 0; k < size*size; k++){
+                float data = 
+                    get_pixel(im, j/im.w+k/size, j%im.w+k%size, i/size*size);
+                col.data[(i+k)*col.cols+j] = data;
+            }
+        }
+    }
 
 
     return col;
