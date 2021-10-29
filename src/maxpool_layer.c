@@ -5,6 +5,17 @@
 #include "uwnet.h"
 
 
+float get_data(matrix m, int w, int h, int c, int idx, int width, int height, int channel) {
+    // printf("w: %d, h: %d, c: %d, idx: %d, width: %d, height: %d, channel: %d\n", w, h, c, idx, width, height, channel);
+    if (w < 0 || w >= width || h < 0 || h >= height) {
+        return 0;
+    }
+    int pos = idx*width*height*channel + c*width*height + h*width + w;
+    // printf("get_data pos: %d\n", pos);
+    return m.data[pos];
+}
+
+
 // Run a maxpool layer on input
 // layer l: pointer to layer to run
 // matrix in: input to layer
@@ -21,22 +32,28 @@ matrix forward_maxpool_layer(layer l, matrix in)
     matrix out = make_matrix(in.rows, outw*outh*l.channels);
 
     // TODO: 6.1 - iterate over the input and fill in the output with max values
-    for(int i = 0; i < in.cols*in.rows; i += l.stride){
-        float max = 0;
-        for(int m = 0; m < l.size*l.size; m++){
-            int x = m % l.size - (l.size-1)/2;
-            int y = m / l.size - (l.size-1)/2;
-            int offset = x + y * in.cols;
-            if(i+offset<0 || i+offset>=l.size*l.size){
-                continue;
-            }
-            if(in.data[i+offset]>max){
-                max = in.data[i+offset];
+    for (int i = 0; i < out.rows; i++) {  // each image
+        for (int c = 0; c < l.channels; c++) {  // each channel
+            for (int h = 0; h < outh; h++) {
+                for (int w = 0; w < outw; w++) {
+                    // find center
+                    int inw = w * l.stride;
+                    int inh = h * l.stride;
+                    // find max
+                    float max = get_data(in, inw, inh, c, i, l.width, l.height, l.channels);
+                    for (int dh = 0; dh < l.size; dh++) {
+                        for (int dw = 0; dw < l.size; dw++) {
+                            int currW = inw + dw - (l.size - 1) / 2;
+                            int currH = inh + dh - (l.size - 1) / 2;
+                            max = MAX(max, get_data(in, currW, currH, c, i, l.width, l.height, l.channels));
+                        }
+                    }
+                    int idx = i*outw*outh*l.channels + c*outh*outw + h*outw + w;
+                    out.data[idx] = max;
+                }
             }
         }
-        // out.data[i/l.stride] = max;
     }
-
 
     return out;
 }
@@ -54,22 +71,39 @@ matrix backward_maxpool_layer(layer l, matrix dy)
     // TODO: 6.2 - find the max values in the input again and fill in the
     // corresponding delta with the delta from the output. This should be
     // similar to the forward method in structure.
-    for(int i = 0; i < in.cols*in.rows; i+= l.stride){
-        float max = -INFINITY;
-        float delta = 0;
-        for(int m = 0; m < l.size*l.size; m++){
-            int x = m % l.size - (l.size-1)/2;
-            int y = m / l.size - (l.size-1)/2;
-            int offset = x + y * in.cols;
-            if(i+offset<0 || i+offset>=l.size*l.size){
-                continue;
-            }
-            if(in.data[i+offset]>max){
-                max = in.data[i+offset];
-                delta = dy.data[i+offset];
+    for (int i = 0; i < dx.rows; i++) {  // each image
+        for (int c = 0; c < l.channels; c++) {  // each channel
+            for (int h = 0; h < outh; h++) {
+                for (int w = 0; w < outw; w++) {
+                    // find center
+                    int inw = w * l.stride;
+                    int inh = h * l.stride;
+                    // find max
+                    int maxW = inw;
+                    int maxH = inh;
+                    float max = get_data(in, inw, inh, c, i, l.width, l.height, l.channels);
+                    for (int dh = 0; dh < l.size; dh++) {
+                        for (int dw = 0; dw < l.size; dw++) {
+                            int currW = inw + dw - (l.size - 1) / 2;
+                            int currH = inh + dh - (l.size - 1) / 2;
+                            float val = get_data(in, currW, currH, c, i, l.width, l.height, l.channels);
+                            if (val > max) {
+                                max = val;
+                                maxW = currW;
+                                maxH = currH;
+                            }
+                        }
+                    }
+                    if (maxW < 0 || maxW >= l.width || maxH < 0 || maxH >= l.height) {
+                       printf("max=%.5f, maxH=%d, maxW=%d\n", max, maxH, maxW);
+                    }
+                    int dy_idx = i*outw*outh*l.channels + c*outh*outw + h*outw + w;
+                    float dy_val = dy.data[dy_idx];
+                    int dx_idx = i*l.channels*l.height*l.width + c*l.height*l.width + maxH*l.width + maxW;
+                    dx.data[dx_idx] += dy_val;
+                }
             }
         }
-        dx.data[i] = delta;
     }
 
 
