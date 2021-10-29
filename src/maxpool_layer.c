@@ -21,17 +21,20 @@ matrix forward_maxpool_layer(layer l, matrix in)
     matrix out = make_matrix(in.rows, outw*outh*l.channels);
 
     // TODO: 6.1 - iterate over the input and fill in the output with max values
-    for(int i = 0; i < in.cols*in.rows; i+= l.stride){
-        float max = -INFINITY;
+    for(int i = 0; i < in.cols*in.rows; i += l.stride){
+        float max = 0;
         for(int m = 0; m < l.size*l.size; m++){
             int x = m % l.size - (l.size-1)/2;
             int y = m / l.size - (l.size-1)/2;
             int offset = x + y * in.cols;
+            if(i+offset<0 || i+offset>=l.size*l.size){
+                continue;
+            }
             if(in.data[i+offset]>max){
                 max = in.data[i+offset];
             }
         }
-        out.data[i] = max;
+        // out.data[i/l.stride] = max;
     }
 
 
@@ -58,12 +61,15 @@ matrix backward_maxpool_layer(layer l, matrix dy)
             int x = m % l.size - (l.size-1)/2;
             int y = m / l.size - (l.size-1)/2;
             int offset = x + y * in.cols;
+            if(i+offset<0 || i+offset>=l.size*l.size){
+                continue;
+            }
             if(in.data[i+offset]>max){
                 max = in.data[i+offset];
                 delta = dy.data[i+offset];
             }
         }
-        dx.data[i] = max;
+        dx.data[i] = delta;
     }
 
 
