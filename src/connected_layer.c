@@ -52,7 +52,7 @@ matrix forward_connected_layer(layer l, matrix x)
     matrix y = matmul(*l.x, l.w);
     y = forward_bias(y, l.b);
     layer acti = make_activation_layer(l.activation);
-    forward_activation_layer(acti, y);
+    acti.forward(acti, y);
     return y;
 }
 

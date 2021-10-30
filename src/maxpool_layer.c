@@ -79,9 +79,9 @@ matrix backward_maxpool_layer(layer l, matrix dy)
                     int inw = w * l.stride;
                     int inh = h * l.stride;
                     // find max
-                    int maxW = inw;
-                    int maxH = inh;
-                    float max = get_data(in, inw, inh, c, i, l.width, l.height, l.channels);
+                    int maxW = -1;
+                    int maxH = -1;
+                    float max = -10000;
                     for (int dh = 0; dh < l.size; dh++) {
                         for (int dw = 0; dw < l.size; dw++) {
                             int currW = inw + dw - (l.size - 1) / 2;
@@ -94,13 +94,13 @@ matrix backward_maxpool_layer(layer l, matrix dy)
                             }
                         }
                     }
-                    if (maxW < 0 || maxW >= l.width || maxH < 0 || maxH >= l.height) {
-                       printf("max=%.5f, maxH=%d, maxW=%d\n", max, maxH, maxW);
+                    float dy_val = get_data(dy, w, h, c, i, outw, outh, l.channels);
+                    int dx_idx = i*l.width*l.height*l.channels + c*l.width*l.height + maxH*l.width + maxW;
+                    if (l.size == 3 && dx.data[dx_idx] != 0) {
+                        printf("(maxH=%d, maxW=%d)=%.5f\n", maxH, maxW, dy_val);
                     }
-                    int dy_idx = i*outw*outh*l.channels + c*outh*outw + h*outw + w;
-                    float dy_val = dy.data[dy_idx];
-                    int dx_idx = i*l.channels*l.height*l.width + c*l.height*l.width + maxH*l.width + maxW;
-                    dx.data[dx_idx] += dy_val;
+                    float prev_val = dx.data[dx_idx];
+                    dx.data[dx_idx] = prev_val + dy_val;
                 }
             }
         }
