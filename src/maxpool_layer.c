@@ -96,9 +96,6 @@ matrix backward_maxpool_layer(layer l, matrix dy)
                     }
                     float dy_val = get_data(dy, w, h, c, i, outw, outh, l.channels);
                     int dx_idx = i*l.width*l.height*l.channels + c*l.width*l.height + maxH*l.width + maxW;
-                    if (l.size == 3 && dx.data[dx_idx] != 0) {
-                        printf("(maxH=%d, maxW=%d)=%.5f\n", maxH, maxW, dy_val);
-                    }
                     float prev_val = dx.data[dx_idx];
                     dx.data[dx_idx] = prev_val + dy_val;
                 }
