@@ -43,5 +43,12 @@ print("test accuracy:     %f", accuracy_net(m, test))
 # How accurate is the fully connected network vs the convnet when they use similar number of operations?
 # Why are you seeing these results? Speculate based on the information you've gathered and what you know about DL and ML.
 # Your answer:
-#
+# convnet does much better than the fully connected network.
+# I think this is because convnet's archtecture utilizes the operations
+# much better than normal fully connected network.
+# convnet make connections between layers of the neural network focuing
+# on the near pixels which favors how images are structures.
+# Therefore a lot of connections(operations) are saved from less significant pixels far away.
+# Such saved operations enabled us to have a much bigger network to deal with complex tasks
+# regarding computer vision.
 
