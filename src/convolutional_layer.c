@@ -202,7 +202,11 @@ matrix backward_convolutional_layer(layer l, matrix dy)
 void update_convolutional_layer(layer l, float rate, float momentum, float decay)
 {
     // TODO: 5.3
-    update_connected_layer(l, rate, momentum, decay);
+    axpy_matrix(decay, l.w, l.dw);
+    axpy_matrix(-rate, l.dw, l.w);
+    scal_matrix(momentum, l.dw);
+    axpy_matrix(-rate, l.db, l.b);
+    scal_matrix(momentum, l.db);
 }
 
 // Make a new convolutional layer
