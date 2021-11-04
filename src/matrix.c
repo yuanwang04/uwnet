@@ -105,13 +105,12 @@ matrix matmul(matrix a, matrix b)
     assert(a.cols == b.rows);
     matrix c = make_matrix(a.rows, b.cols);
     // TODO: 1.4 - Implement matrix multiplication. Make sure it's fast!
+    
     for (int i = 0; i < a.rows; i++) {
-        for (int j = 0; j < b.cols; j++) {
-            float newVal = 0;
-            for (int k = 0; k < a.cols; k++) {
-                newVal += a.data[pos(a, i, k)] * b.data[pos(b, k, j)];
+        for (int k = 0; k < a.cols; k++) {
+            for (int j = 0; j < b.cols; j++) {
+                c.data[pos(c, i, j)] += a.data[pos(a, i, k)] * b.data[pos(b, k, j)];
             }
-            c.data[pos(c, i, j)] = newVal;
         }
     }
     return c;
